@@ -6,28 +6,28 @@ import pandas as pd
 def load_n_prep_data(filename):
     print(f"Loading data from : {filename}...")
     cv_df = pd.read_csv(filename,parse_dates=["Date"])
-    cv_df = cv_df.set_index(["Date"])
+    cv_df = cv_df.set_index(["Date"]) # sets index on Date column, useful for merge etc later
     
     print("Calculating 'Active' metric from the daily records...")
-    # cv_df['Active'] = cv_df.apply(lambda row: row.Confirmed - row.Recovered - row.Deceased, axis=1)
-    cv_df['Active'] = cv_df['Confirmed'] - cv_df['Recovered'] - cv_df['Deceased']
+    # cv_df['Active'] = cv_df.apply(lambda row: row.Confirmed - row.Recovered - row.Deceased, axis=1) #slower than below
+    cv_df['Active'] = cv_df['Confirmed'] - cv_df['Recovered'] - cv_df['Deceased'] # faster than above
     
     print("Calculating the State level sum of daily metrics by adding all District level data...")
-    state_level_sum = cv_df.groupby(['Date','State']).sum().reset_index()
+    state_level_sum = cv_df.groupby(['Date','State']).sum().reset_index() # reset_index is required to flatten out the table, otherwise group by creates a multiindex on [Date, State]
     state_level_sum["District"] = "All_Districts"
-    state_level_sum = state_level_sum.set_index(["Date"])
+    state_level_sum = state_level_sum.set_index(["Date"]) # indexing back on Date as reset_index clears index from above
     cv_df = cv_df.append(state_level_sum)
 
     print("Calculating incremental metrics from daily metrics and merging data...")
-    sd_groups = cv_df.groupby(['State','District'])
+    sd_groups = cv_df.groupby(['State','District']) # sd_groups is a DataFrameGroupBy Object, with first 2 columns as State, District
     group_list = []
-    for name, group in sd_groups:
-        num_cols = group.iloc[:,2:]
-        num_cols = num_cols.diff()
-        num_cols.insert(0,'State',name[0])
+    for name, group in sd_groups: # name is a tuple, group is a Dataframe
+        num_cols = group.iloc[:,2:] # Removes the State, District index columns, so that the rest are all numerical metrics
+        num_cols = num_cols.diff() # Does a diff between current row and previous row. First row will be nan
+        num_cols.insert(0,'State',name[0]) # name contains the indexed columns State, District. Adding back
         num_cols.insert(1,'District',name[1])
-        group_list.append(num_cols)
-    cv_df_i = pd.concat(group_list)
+        group_list.append(num_cols) # num_cols is a Dataframe appended to a list
+    cv_df_i = pd.concat(group_list) # concatenates a list of Dataframes
     cv_df_i = cv_df_i.rename(columns={"Confirmed" : "Confirmed_i", "Recovered":"Recovered_i","Deceased":"Deceased_i","Other":"Other_i","Tested":"Tested_i","Active":"Active_i"})
     cv_df = pd.merge(cv_df, cv_df_i, on = ["Date","State","District"])
     return cv_df
@@ -53,14 +53,19 @@ def prep_fig(cv_df, filter, metric, option):
         fig = px.line(cv_df, y=metric, color="State", line_group="District")
         fig.update_traces(mode="lines", line={"width":4})
         fig.update_layout(hovermode="closest", showlegend=True)
+    elif(option == 4):
+        fig = px.line(cv_df, y=metric, color="District")
+        fig.update_traces(mode="lines", line={"width":4})
+        fig.update_layout(hovermode="closest", showlegend=True)
     
     print("Ready to show graph...")
     return fig
 
 def main():
     filename = 'https://api.covid19india.org/csv/latest/districts.csv'
-    filter = 'District!="All_Districts"'
-    metric = 'Confirmed_i'
+    # filter = 'State=="Maharashtra" and District!="All_Districts"'
+    filter = 'District=="All_Districts"'
+    metric = 'Active'
     option = 3
 
     cv_df = load_n_prep_data(filename)
