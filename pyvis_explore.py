@@ -52,7 +52,7 @@ emp_id_dict = {}
 for emp in df.itertuples():
     net.add_node(emp.Index, 
                     label = emp.EMP_NAME,
-                    title = emp.TC + ", " + emp.IBM_POC,
+                    title = f"{emp.EMP_NAME} ({emp.JRSS}) - {emp.TC}, DL: {emp.IBM_POC}",
                     color = get_color(emp.CITY),
                     shape = get_shape(emp.BAND),
                     borderWidth = get_borderwidth(emp.COMMERCIAL_STATUS))
