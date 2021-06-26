@@ -82,7 +82,7 @@ def prep_fig(cv_df, filter='District=="All_Districts"', metric='Active', option=
     print("Ready to show graph...")
     return fig
 
-def dash_main(cv_df):
+def prep_dash(cv_df):
     # create dash app
     app = dash.Dash(external_stylesheets=[dbc.themes.LUX])
 
@@ -141,13 +141,16 @@ def dash_main(cv_df):
         print(metric, filter, option)
 
         return [prep_fig(cv_df, filter, metric, option)] # The return needs to be a List of some reason!
-    
-    wb.open_new_tab('http://127.0.0.1:8050/')
-    app.run_server(debug=False)
 
-if __name__ == "__main__":
+    return app
+
+def main():
     filename = 'https://api.covid19india.org/csv/latest/districts.csv'
     # filename = "districts_subset.csv"
     cv_df = load_n_prep_data(filename)
-    dash_main(cv_df)
+    wb.open_new_tab('http://127.0.0.1:8050/')
+    prep_dash(cv_df).run_server(debug=False)
+
+if __name__ == "__main__":
+    main()
     
