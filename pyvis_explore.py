@@ -3,6 +3,7 @@
 from pyvis.network import Network
 import pandas as pd
 import math
+import webbrowser as wb 
 
 # pyvis node properties. See add_node(...) documentation at https://pyvis.readthedocs.io/en/latest/documentation.html
 # id = emp_code
@@ -42,8 +43,8 @@ def get_borderwidth(commercial_status):
     else:
         return 0
 
-df = pd.read_excel("VW_COMMERCIAL_BARCLAYS_INFO_202106181054.xlsx",engine='openpyxl', index_col='EMP_CODE')
-# df = df.iloc[0:500,:]
+df = pd.read_excel("./data/VW_COMMERCIAL_BARCLAYS_INFO_202109161125.xlsx",engine='openpyxl', index_col='EMP_CODE')
+# df = df.iloc[0:100,:]
 
 net = Network(height='100%', width='100%', bgcolor='white', font_color='black')
 net.add_node("Outsider")
@@ -65,3 +66,4 @@ for emp in df.itertuples():
 net.repulsion(node_distance=200, central_gravity=0.05, spring_length=100)
 # net.show_buttons(filter_=['physics'])
 net.show('nodes.html')
+wb.open_new_tab('file:///Users/surjitdas/OneDrive/sandbox/Data_visualization/nodes.html')

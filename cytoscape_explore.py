@@ -1,11 +1,12 @@
 import dash
 import dash_cytoscape as cyto
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 import pandas as pd  # pip install pandas
 import plotly.express as px
+import networkx as nx
 
 import webbrowser as wb
 
@@ -63,7 +64,7 @@ def get_linkcolor(tc):
 
 def load_and_prep_data(filename):
     df = pd.read_excel(filename,engine='openpyxl')
-    # df = df.iloc[0:100,:]
+    # df = df.iloc[0:500,:]
     
     graph_df = df[['EMP_CODE','EMP_NAME','EMP_NOTESID','PEM_NOTESID','BAND','JRSS','CITY','TC','IBM_POC','COMMERCIAL_STATUS']]
     graph_df = graph_df.set_index('EMP_CODE')
@@ -94,14 +95,27 @@ def load_and_prep_data(filename):
     graph_df["PEM_ID"] = pem_id
     graph_df["SOC_SIZE"] = soc_size
 
+    # print(graph_df)
+
     return graph_df
 
 def prep_graph_elements(df):
+    # df = df.sort_values(by=["TC"])
+    # nxg = nx.Graph()
+    # for emp in df.itertuples():
+    #     nxg.add_node(emp.Index)
+    #     nxg.add_edge(emp.Index, emp.PEM_ID)
+    # print("Working out the graph layout...")
+    # pos_ = nx.spiral_layout(nxg, scale=3000) #goodish: shell scale=5000; spring k=10000 scale=3000; spiral scale=3000
+    # print("Gotcha!")
+    # # print(pos_)
+    
     elements = [{'data': {'id': 'Outsider', 'label': 'Outsider', 'parent':'UNKNOWN'}}]
-
     for emp in df.itertuples():
         node = {}
         node_data = {}
+        
+        
         node_data["id"] = emp.Index
         node_data["label"] = emp.EMP_NAME
         node_data["notes_id"] = emp.EMP_NOTESID
@@ -112,6 +126,13 @@ def prep_graph_elements(df):
         node_data["soc_size"] = emp.SOC_SIZE + 20
         node_data["parent"] = emp.TC
         node["data"] = node_data
+
+        # node_position = {}
+        # x,y = pos_[emp.Index]
+        # node_position["x"] = x
+        # node_position["y"] = y
+        # node["position"] = node_position
+
         node["classes"] = f"{get_color(emp.CITY)} {get_shape(emp.BAND)} border_{get_borderwidth(emp.COMMERCIAL_STATUS)}"
         elements.append(node)
         
@@ -237,21 +258,15 @@ def prep_dash(elements):
 #         return fig
 
 def main():
-    filename = "VW_COMMERCIAL_BARCLAYS_INFO_202106251226.xlsx"
-    df = load_and_prep_data(filename)
-    wb.open_new_tab('http://127.0.0.1:8050/')
-    app.run_server(debug=True)
-
-def test():
-    filename = "VW_COMMERCIAL_BARCLAYS_INFO_202106251226.xlsx"
+    filename = "data/VW_COMMERCIAL_BARCLAYS_INFO_202108061114.xlsx"
     df = load_and_prep_data(filename)
     # print(df)
     elements = prep_graph_elements(df)
     # print(elements)
     app = prep_dash(elements)
-    # wb.open_new_tab('http://127.0.0.1:8050/')
+    wb.open_new_tab('http://127.0.0.1:8050/')
     app.run_server(debug=True)
 
 if __name__ == '__main__':
     # main()
-    test()
+    main()

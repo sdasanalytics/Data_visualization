@@ -5,8 +5,7 @@ import plotly.express as px
 import pandas as pd
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 
@@ -145,8 +144,8 @@ def prep_dash(cv_df):
     return app
 
 def main():
-    filename = 'https://api.covid19india.org/csv/latest/districts.csv'
-    # filename = "districts_subset.csv"
+    filename = 'https://data.covid19india.org/csv/latest/districts.csv'
+    # filename = "data/districts.csv"
     cv_df = load_n_prep_data(filename)
     wb.open_new_tab('http://127.0.0.1:8050/')
     prep_dash(cv_df).run_server(debug=False)
